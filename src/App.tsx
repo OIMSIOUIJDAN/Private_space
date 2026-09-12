@@ -11,7 +11,7 @@ function AppContent() {
   const isChat = location.pathname === '/chat';
 
   return (
-    <div className="min-h-screen bg-cream">
+    <div className="min-h-screen bg-navy">
       <AnimatePresence mode="wait">
         <Routes location={location} key={location.pathname}>
           <Route path="/" element={<Home />} />

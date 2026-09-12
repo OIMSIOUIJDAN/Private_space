@@ -59,20 +59,20 @@ export default function Chat() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-cream">
+    <div className="flex flex-col h-screen bg-navy">
       <FloatingHearts active={showHearts} type={heartType} />
       
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex items-center gap-3 px-5 py-4 bg-white/70 backdrop-blur-xl border-b border-rose-light/20 safe-top"
+        className="flex items-center gap-3 px-5 py-4 bg-surface/80 backdrop-blur-xl border-b border-border-blue/40 safe-top"
       >
         <button onClick={() => navigate('/')} className="p-1">
           <ArrowLeft size={20} className="text-text-secondary" />
         </button>
-        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-soft-pink to-dusty-rose flex items-center justify-center">
-          <Heart size={16} className="text-white fill-white" />
+        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-baby-pink/30 to-blue-accent flex items-center justify-center">
+          <Heart size={16} className="text-baby-pink fill-baby-pink" />
         </div>
         <div className="flex-1">
           <h2 className="font-serif text-lg text-text-primary">
@@ -95,13 +95,15 @@ export default function Chat() {
             >
               <div className={`max-w-[80%] ${message.sender === 'me' ? 'order-1' : 'order-1'}`}>
                 <div
-                  className={`rounded-3xl px-4 py-3 shadow-sm ${
+                  className={`rounded-3xl px-4 py-3 shadow-lg ${
                     message.sender === 'me'
-                      ? 'bg-gradient-to-br from-soft-pink to-blush rounded-br-lg'
-                      : 'bg-white border border-rose-light/30 rounded-bl-lg'
+                      ? 'bg-gradient-to-br from-baby-pink/90 to-baby-pink-dark/80 rounded-br-lg'
+                      : 'bg-surface-light border border-border-blue/40 rounded-bl-lg'
                   }`}
                 >
-                  <p className="text-sm text-text-primary leading-relaxed">{message.text}</p>
+                  <p className={`text-sm leading-relaxed ${
+                    message.sender === 'me' ? 'text-navy' : 'text-text-primary'
+                  }`}>{message.text}</p>
                 </div>
                 <p className={`text-[10px] text-text-muted mt-1 ${message.sender === 'me' ? 'text-right mr-1' : 'text-left ml-1'}`}>
                   {formatTime(message.time)}
@@ -114,19 +116,19 @@ export default function Chat() {
       </div>
 
       {/* Input Area */}
-      <div className="px-4 pb-4 pt-2 bg-white/50 backdrop-blur-sm border-t border-rose-light/20 safe-bottom">
+      <div className="px-4 pb-4 pt-2 bg-surface/60 backdrop-blur-sm border-t border-border-blue/40 safe-bottom">
         {/* Love buttons */}
         <div className="flex gap-2 mb-3 justify-center">
           <button
             onClick={() => sendVirtualLove('hug')}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-soft-pink/60 border border-rose-light/30 text-xs font-medium text-burgundy active:scale-95 transition-transform"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-baby-pink/15 border border-baby-pink/30 text-xs font-medium text-baby-pink active:scale-95 transition-transform"
           >
-            <Heart size={14} className="fill-burgundy/40" />
+            <Heart size={14} className="fill-baby-pink/40" />
             Send a hug
           </button>
           <button
             onClick={() => sendVirtualLove('kiss')}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-soft-pink/60 border border-rose-light/30 text-xs font-medium text-burgundy active:scale-95 transition-transform"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-baby-pink/15 border border-baby-pink/30 text-xs font-medium text-baby-pink active:scale-95 transition-transform"
           >
             <span className="text-sm">💋</span>
             Send a kiss
@@ -145,13 +147,13 @@ export default function Chat() {
               onChange={(e) => setInputText(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="Write something sweet..."
-              className="w-full px-4 py-3 rounded-full bg-white border border-rose-light/40 text-sm text-text-primary placeholder:text-text-muted/60 focus:outline-none focus:border-dusty-rose focus:ring-2 focus:ring-soft-pink/30 transition-all"
+              className="w-full px-4 py-3 rounded-full bg-surface-light border border-border-blue/50 text-sm text-text-primary placeholder:text-text-muted/60 focus:outline-none focus:border-baby-pink/50 focus:ring-2 focus:ring-baby-pink/20 transition-all"
             />
           </div>
           <button
             onClick={sendMessage}
             disabled={!inputText.trim()}
-            className="p-3 rounded-full bg-burgundy text-white disabled:opacity-40 active:scale-95 transition-all shadow-sm"
+            className="p-3 rounded-full bg-baby-pink text-navy disabled:opacity-40 active:scale-95 transition-all shadow-lg shadow-baby-pink/20"
           >
             <Send size={18} />
           </button>

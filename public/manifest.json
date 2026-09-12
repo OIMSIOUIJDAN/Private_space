@@ -4,8 +4,8 @@
   "description": "A private, romantic space just for us",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#fdf8f5",
-  "theme_color": "#f5e6e0",
+  "background_color": "#0f1923",
+  "theme_color": "#0f1923",
   "orientation": "portrait",
   "icons": [
     {

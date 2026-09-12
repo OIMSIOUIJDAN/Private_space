@@ -45,7 +45,7 @@ export default function FloatingHearts({ active, type = 'hearts' }: FloatingHear
                 {type === 'hearts' ? (
                   <Heart
                     size={size}
-                    className="text-burgundy fill-burgundy/40"
+                    className="text-baby-pink fill-baby-pink/40"
                   />
                 ) : (
                   <span style={{ fontSize: size }} className="select-none">💋</span>
