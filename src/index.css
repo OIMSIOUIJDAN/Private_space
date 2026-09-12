@@ -1,1 +1,135 @@
 @import "tailwindcss";
+
+@theme {
+  --color-blush: #f5e6e0;
+  --color-cream: #fdf8f5;
+  --color-dusty-rose: #c9a0a0;
+  --color-burgundy: #722f37;
+  --color-soft-pink: #f0d4d4;
+  --color-warm-white: #fef9f6;
+  --color-rose-light: #e8c4c4;
+  --color-rose-dark: #a06060;
+  --color-text-primary: #4a2c2c;
+  --color-text-secondary: #7a5555;
+  --color-text-muted: #a08080;
+  --font-serif: 'Playfair Display', serif;
+  --font-sans: 'Quicksand', sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-sans);
+  color: var(--color-text-primary);
+  background-color: var(--color-cream);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-serif);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-cream);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-dusty-rose);
+  border-radius: 10px;
+}
+
+/* Floating hearts animation */
+@keyframes floatHeart {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1) rotate(0deg);
+  }
+  50% {
+    opacity: 0.8;
+    transform: translateY(-120px) scale(1.2) rotate(15deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-250px) scale(0.6) rotate(-10deg);
+  }
+}
+
+@keyframes floatKiss {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    opacity: 0.9;
+    transform: translateY(-100px) scale(1.3);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-200px) scale(0.5);
+  }
+}
+
+@keyframes pulse-soft {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-float-heart {
+  animation: floatHeart 2.5s ease-out forwards;
+}
+
+.animate-float-kiss {
+  animation: floatKiss 2s ease-out forwards;
+}
+
+.animate-pulse-soft {
+  animation: pulse-soft 3s ease-in-out infinite;
+}
+
+/* Masonry grid */
+.masonry-grid {
+  columns: 2;
+  column-gap: 12px;
+}
+
+@media (min-width: 768px) {
+  .masonry-grid {
+    columns: 3;
+    column-gap: 16px;
+  }
+}
+
+.masonry-item {
+  break-inside: avoid;
+  margin-bottom: 12px;
+}
+
+/* Safe area for mobile */
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 20px);
+}
+
+.safe-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
