@@ -2,10 +2,19 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, Send, Smile, ArrowLeft } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { mockMessages, type Message } from '../data/mockData';
+import { supabase } from '../lib/supabase';
 import FloatingHearts from '../components/FloatingHearts';
 
-function formatTime(date: Date): string {
+interface Message {
+  id: string;
+  sender: 'me' | 'him';
+  text: string;
+  type?: 'text' | 'hug' | 'kiss';
+  created_at: string;
+}
+
+function formatTime(dateString: string): string {
+  const date = new Date(dateString);
   const hours = date.getHours();
   const minutes = date.getMinutes().toString().padStart(2, '0');
   const ampm = hours >= 12 ? 'evening' : hours < 12 && hours >= 5 ? 'morning' : 'night';
@@ -15,39 +24,85 @@ function formatTime(date: Date): string {
 
 export default function Chat() {
   const navigate = useNavigate();
-  const [messages, setMessages] = useState<Message[]>(mockMessages);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
   const [showHearts, setShowHearts] = useState(false);
   const [heartType, setHeartType] = useState<'hearts' | 'kisses'>('hearts');
+  const [loading, setLoading] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const sendMessage = () => {
+  // Load messages and subscribe to real-time updates
+  useEffect(() => {
+    // Load existing messages
+    const loadMessages = async () => {
+      const { data, error } = await supabase
+        .from('messages')
+        .select('*')
+        .order('created_at', { ascending: true });
+
+      if (error) {
+        console.error('Error loading messages:', error);
+      } else if (data) {
+        setMessages(data);
+      }
+      setLoading(false);
+    };
+
+    loadMessages();
+
+    // Subscribe to real-time changes
+    const channel = supabase
+      .channel('chat-messages')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'messages' },
+        (payload) => {
+          setMessages((prev) => [...prev, payload.new as Message]);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  const sendMessage = async () => {
     if (!inputText.trim()) return;
-    const newMessage: Message = {
-      id: Date.now().toString(),
+
+    const { error } = await supabase.from('messages').insert({
       sender: 'me',
       text: inputText,
-      time: new Date(),
-    };
-    setMessages([...messages, newMessage]);
-    setInputText('');
+      type: 'text',
+    });
+
+    if (error) {
+      console.error('Error sending message:', error);
+    } else {
+      setInputText('');
+    }
   };
 
-  const sendVirtualLove = (type: 'hug' | 'kiss') => {
+  const sendVirtualLove = async (type: 'hug' | 'kiss') => {
     setHeartType(type === 'hug' ? 'hearts' : 'kisses');
     setShowHearts(true);
-    const newMessage: Message = {
-      id: Date.now().toString(),
+
+    const text = type === 'hug' ? 'Sending you a warm hug 🤗💕' : 'Blowing you a kiss 💋✨';
+
+    const { error } = await supabase.from('messages').insert({
       sender: 'me',
-      text: type === 'hug' ? 'Sending you a warm hug 🤗💕' : 'Blowing you a kiss 💋✨',
-      time: new Date(),
-      type: type,
-    };
-    setMessages([...messages, newMessage]);
+      text,
+      type,
+    });
+
+    if (error) {
+      console.error('Error sending love:', error);
+    }
+
     setTimeout(() => setShowHearts(false), 3000);
   };
 
@@ -84,34 +139,40 @@ export default function Chat() {
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
-        <AnimatePresence>
-          {messages.map((message, index) => (
-            <motion.div
-              key={message.id}
-              initial={{ opacity: 0, y: 10, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ duration: 0.3, delay: index < 10 ? index * 0.05 : 0 }}
-              className={`flex ${message.sender === 'me' ? 'justify-end' : 'justify-start'}`}
-            >
-              <div className={`max-w-[80%] ${message.sender === 'me' ? 'order-1' : 'order-1'}`}>
-                <div
-                  className={`rounded-3xl px-4 py-3 shadow-lg ${
-                    message.sender === 'me'
-                      ? 'bg-gradient-to-br from-baby-pink/90 to-baby-pink-dark/80 rounded-br-lg'
-                      : 'bg-surface-light border border-border-blue/40 rounded-bl-lg'
-                  }`}
-                >
-                  <p className={`text-sm leading-relaxed ${
-                    message.sender === 'me' ? 'text-navy' : 'text-text-primary'
-                  }`}>{message.text}</p>
+        {loading ? (
+          <div className="flex items-center justify-center h-full">
+            <p className="text-text-muted text-sm">Loading messages...</p>
+          </div>
+        ) : (
+          <AnimatePresence>
+            {messages.map((message, index) => (
+              <motion.div
+                key={message.id}
+                initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ duration: 0.3, delay: index < 10 ? index * 0.05 : 0 }}
+                className={`flex ${message.sender === 'me' ? 'justify-end' : 'justify-start'}`}
+              >
+                <div className={`max-w-[80%] ${message.sender === 'me' ? 'order-1' : 'order-1'}`}>
+                  <div
+                    className={`rounded-3xl px-4 py-3 shadow-lg ${
+                      message.sender === 'me'
+                        ? 'bg-gradient-to-br from-baby-pink/90 to-baby-pink-dark/80 rounded-br-lg'
+                        : 'bg-surface-light border border-border-blue/40 rounded-bl-lg'
+                    }`}
+                  >
+                    <p className={`text-sm leading-relaxed ${
+                      message.sender === 'me' ? 'text-navy' : 'text-text-primary'
+                    }`}>{message.text}</p>
+                  </div>
+                  <p className={`text-[10px] text-text-muted mt-1 ${message.sender === 'me' ? 'text-right mr-1' : 'text-left ml-1'}`}>
+                    {formatTime(message.created_at)}
+                  </p>
                 </div>
-                <p className={`text-[10px] text-text-muted mt-1 ${message.sender === 'me' ? 'text-right mr-1' : 'text-left ml-1'}`}>
-                  {formatTime(message.time)}
-                </p>
-              </div>
-            </motion.div>
-          ))}
-        </AnimatePresence>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        )}
         <div ref={messagesEndRef} />
       </div>
 

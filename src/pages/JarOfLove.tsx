@@ -1,18 +1,45 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Sparkles, Plus, X, Heart } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { mockLoveNotes, type LoveNote } from '../data/mockData';
+import { supabase } from '../lib/supabase';
+
+interface LoveNote {
+  id: string;
+  text: string;
+  created_at: string;
+}
 
 export default function JarOfLove() {
   const navigate = useNavigate();
-  const [notes, setNotes] = useState<LoveNote[]>(mockLoveNotes);
+  const [notes, setNotes] = useState<LoveNote[]>([]);
   const [currentNote, setCurrentNote] = useState<LoveNote | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const [newNoteText, setNewNoteText] = useState('');
   const [isShaking, setIsShaking] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadNotes();
+  }, []);
+
+  const loadNotes = async () => {
+    const { data, error } = await supabase
+      .from('love_notes')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error loading notes:', error);
+    } else if (data) {
+      setNotes(data);
+    }
+    setLoading(false);
+  };
 
   const pullRandomNote = () => {
+    if (notes.length === 0) return;
+    
     setIsShaking(true);
     setTimeout(() => {
       setIsShaking(false);
@@ -21,16 +48,28 @@ export default function JarOfLove() {
     }, 800);
   };
 
-  const addNote = () => {
+  const addNote = async () => {
     if (!newNoteText.trim()) return;
-    const newNote: LoveNote = {
-      id: Date.now().toString(),
+
+    const { error } = await supabase.from('love_notes').insert({
       text: newNoteText,
-      date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-    };
-    setNotes([...notes, newNote]);
-    setNewNoteText('');
-    setShowAddForm(false);
+    });
+
+    if (error) {
+      console.error('Error adding note:', error);
+    } else {
+      await loadNotes();
+      setNewNoteText('');
+      setShowAddForm(false);
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
   };
 
   return (
@@ -105,8 +144,9 @@ export default function JarOfLove() {
           {/* Pull button */}
           <motion.button
             onClick={pullRandomNote}
+            disabled={notes.length === 0}
             whileTap={{ scale: 0.95 }}
-            className="mt-8 flex items-center gap-2 px-8 py-4 rounded-full bg-gradient-to-r from-baby-pink to-baby-pink-dark text-navy font-medium shadow-lg shadow-baby-pink/20 active:scale-95 transition-transform"
+            className="mt-8 flex items-center gap-2 px-8 py-4 rounded-full bg-gradient-to-r from-baby-pink to-baby-pink-dark text-navy font-medium shadow-lg shadow-baby-pink/20 active:scale-95 transition-transform disabled:opacity-40"
           >
             <Sparkles size={18} />
             <span>Pull a note</span>
@@ -136,7 +176,7 @@ export default function JarOfLove() {
                   "{currentNote.text}"
                 </p>
                 <p className="text-xs text-text-muted text-center">
-                  Added on {currentNote.date}
+                  Added on {formatDate(currentNote.created_at)}
                 </p>
               </div>
             </motion.div>
@@ -144,36 +184,38 @@ export default function JarOfLove() {
         </AnimatePresence>
 
         {/* Recent notes list */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
-          className="mt-10"
-        >
-          <h3 className="font-serif text-sm text-text-secondary mb-3 flex items-center gap-2">
-            <Sparkles size={14} />
-            All our reasons
-          </h3>
-          <div className="space-y-2">
-            {notes.map((note, index) => (
-              <motion.div
-                key={note.id}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.6 + index * 0.05 }}
-                className="bg-surface-light/60 rounded-2xl px-4 py-3 border border-border-blue/30 flex items-start gap-3"
-              >
-                <div className="w-6 h-6 rounded-full bg-baby-pink/15 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <Heart size={10} className="text-baby-pink fill-baby-pink/40" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm text-text-primary leading-relaxed">{note.text}</p>
-                  <p className="text-[10px] text-text-muted mt-1">{note.date}</p>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
+        {!loading && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            className="mt-10"
+          >
+            <h3 className="font-serif text-sm text-text-secondary mb-3 flex items-center gap-2">
+              <Sparkles size={14} />
+              All our reasons
+            </h3>
+            <div className="space-y-2">
+              {notes.map((note, index) => (
+                <motion.div
+                  key={note.id}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.6 + index * 0.05 }}
+                  className="bg-surface-light/60 rounded-2xl px-4 py-3 border border-border-blue/30 flex items-start gap-3"
+                >
+                  <div className="w-6 h-6 rounded-full bg-baby-pink/15 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <Heart size={10} className="text-baby-pink fill-baby-pink/40" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-text-primary leading-relaxed">{note.text}</p>
+                    <p className="text-[10px] text-text-muted mt-1">{formatDate(note.created_at)}</p>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        )}
       </div>
 
       {/* Add Note Modal */}
