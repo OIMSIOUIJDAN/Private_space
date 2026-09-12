@@ -28,7 +28,7 @@ A romantic, private web app for two people to share messages, memories, and love
 
 ## 🚀 Deploy
 
-This app auto-deploys to GitHub Pages via GitHub Actions on every push to `main`.
+This app is deployed on Vercel. Every push to `main` auto-deploys instantly.
 
 ## 💡 Setup
 
