@@ -2,43 +2,117 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Us — Our Private Space</title>
-    <meta name="description" content="A private, romantic space just for us" />
-    <meta name="theme-color" content="#0f1923" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    
+    <!-- NO CACHE - Force fresh load -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    
+    <!-- Primary Meta Tags -->
+    <title>O2M</title>
+    <meta name="theme-color" content="#1C2E4A" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="Us ♥" />
-    <link rel="manifest" href="/manifest.json" />
-    <link rel="apple-touch-icon" href="/icons/icon-192.svg" />
+    <meta name="apple-mobile-web-app-title" content="O2M" />
+    <meta name="description" content="Our Private Space" />
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest" />
+    
+    <!-- Apple Touch Icon -->
+    <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+    
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Quicksand:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    
+    <!-- Base Styles -->
     <style>
       html, body {
         margin: 0;
         padding: 0;
         width: 100%;
         min-height: 100vh;
-        background-color: #0f1923;
+        background-color: #FDFBF7;
         font-family: 'Quicksand', sans-serif;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
+        -webkit-tap-highlight-color: transparent;
       }
       #root {
         min-height: 100vh;
       }
+      body {
+        overscroll-behavior-y: contain;
+      }
+      .safe-top {
+        padding-top: env(safe-area-inset-top);
+      }
+      .safe-bottom {
+        padding-bottom: env(safe-area-inset-bottom);
+      }
+      #loading-screen {
+        position: fixed;
+        inset: 0;
+        background: #FDFBF7;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        transition: opacity 0.3s ease;
+      }
+      #loading-screen.hidden {
+        opacity: 0;
+        pointer-events: none;
+      }
+      .loading-heart {
+        width: 60px;
+        height: 60px;
+        animation: pulse 1.5s ease-in-out infinite;
+      }
+      @keyframes pulse {
+        0%, 100% { transform: scale(1); opacity: 0.8; }
+        50% { transform: scale(1.1); opacity: 1; }
+      }
     </style>
   </head>
   <body>
+    <!-- Loading Screen -->
+    <div id="loading-screen">
+      <div style="text-align: center;">
+        <h1 style="font-family: 'Playfair Display', serif; font-size: 48px; color: #1C2E4A; margin: 0; font-style: italic;">O2M</h1>
+        <p style="font-family: 'Quicksand', sans-serif; font-size: 12px; color: #8A8578; margin-top: 8px;">Our Private Space</p>
+      </div>
+    </div>
+    
     <div id="root"></div>
+    
     <script type="module" src="/src/main.tsx"></script>
+    
+    <!-- UNREGISTER OLD SERVICE WORKER -->
     <script>
       if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js').catch(() => {});
+        navigator.serviceWorker.getRegistrations().then(registrations => {
+          registrations.forEach(reg => reg.unregister());
         });
       }
+      if (window.caches) {
+        caches.keys().then(names => {
+          names.forEach(name => caches.delete(name));
+        });
+      }
+      
+      // Hide loading screen when app is ready
+      window.addEventListener('DOMContentLoaded', () => {
+        setTimeout(() => {
+          const loadingScreen = document.getElementById('loading-screen');
+          if (loadingScreen) {
+            loadingScreen.classList.add('hidden');
+            setTimeout(() => loadingScreen.remove(), 300);
+          }
+        }, 500);
+      });
     </script>
   </body>
 </html>
